@@ -34,18 +34,6 @@ async def create_listing(listing: BookingListingIn):
     print("Creating listing for seller:", seller.email)
 
     new_listing = await BookingListing.create(
-        ...
-    )
-
-    print("Listing created with ID:", new_listing.id)
-
-    return {
-        "id": new_listing.id,
-        ...
-    }
-
-    # Create and save listing
-    new_listing = await BookingListing.create(
         hotel_name=listing.hotel_name,
         location=listing.location,
         check_in=listing.check_in,
@@ -60,6 +48,8 @@ async def create_listing(listing: BookingListingIn):
         payout_account=listing.payout_account,
         seller=seller,
     )
+
+    print("Listing created with ID:", new_listing.id)
 
     return {
         "id": new_listing.id,
