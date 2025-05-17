@@ -24,10 +24,25 @@ class BookingListingIn(BaseModel):
 
 @router.post("/listings")
 async def create_listing(listing: BookingListingIn):
-    # Ensure seller exists
+    print("Received listing data:", listing.dict())
+
     seller = await User.get_or_none(id=listing.seller_id)
     if not seller:
+        print("Seller not found!")
         raise HTTPException(status_code=404, detail="Seller not found")
+
+    print("Creating listing for seller:", seller.email)
+
+    new_listing = await BookingListing.create(
+        ...
+    )
+
+    print("Listing created with ID:", new_listing.id)
+
+    return {
+        "id": new_listing.id,
+        ...
+    }
 
     # Create and save listing
     new_listing = await BookingListing.create(
