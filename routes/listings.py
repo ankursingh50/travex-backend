@@ -26,10 +26,11 @@ class BookingListingIn(BaseModel):
 async def create_listing(listing: BookingListingIn):
     print("Received listing data:", listing.dict())
 
-    seller = await User.get_or_none(id=listing.seller_id)
-    if not seller:
-        print("Seller not found!")
-        raise HTTPException(status_code=404, detail="Seller not found")
+    seller, _ = await User.get_or_create(
+    id=listing.seller_id,
+    defaults={"email": f"test{listing.seller_id}@travex.com"}
+    )
+
 
     print("Creating listing for seller:", seller.email)
 
