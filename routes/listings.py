@@ -27,10 +27,9 @@ async def create_listing(listing: BookingListingIn):
     print("Received listing data:", listing.dict())
 
     seller, _ = await User.get_or_create(
-    id=listing.seller_id,
-    defaults={"email": f"test{listing.seller_id}@travex.com"}
+        id=listing.seller_id,
+        defaults={"email": f"test{listing.seller_id}@travex.com"}
     )
-
 
     print("Creating listing for seller:", seller.email)
 
@@ -60,3 +59,25 @@ async def create_listing(listing: BookingListingIn):
         "check_out": str(new_listing.check_out),
         "status": new_listing.status,
     }
+
+@router.get("/listings")
+async def get_all_listings():
+    listings = await BookingListing.all().prefetch_related("seller")
+    return [
+        {
+            "id": listing.id,
+            "hotel_name": listing.hotel_name,
+            "location": listing.location,
+            "check_in": str(listing.check_in),
+            "check_out": str(listing.check_out),
+            "room_type": listing.room_type,
+            "resale_price": float(listing.resale_price),
+            "original_price": float(listing.original_price),
+            "amenities": listing.amenities.split(", ") if listing.amenities else [],
+            "hotel_images": listing.hotel_images or [],
+            "voucher_image_url": listing.voucher_image_url,
+            "seller_email": listing.seller.email,
+            "status": listing.status
+        }
+        for listing in listings
+    ]
