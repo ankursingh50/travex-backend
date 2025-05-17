@@ -1,10 +1,12 @@
 from fastapi import FastAPI
 from tortoise.contrib.fastapi import register_tortoise
+from models import User
+from routes.listings import router as listings_router  # ✅ Import router
 import os
 
-from models import User  # ✅ must be imported BEFORE register_tortoise
-
 app = FastAPI()
+
+app.include_router(listings_router)  # ✅ Register route
 
 @app.get("/health")
 def health_check():
@@ -14,7 +16,6 @@ def health_check():
 async def get_users():
     return await User.all().values()
 
-# ✅ Register after model is imported
 register_tortoise(
     app,
     db_url=os.getenv("DATABASE_URL").replace("postgresql://", "postgres://"),
