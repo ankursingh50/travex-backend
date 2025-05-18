@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
 from typing import List, Optional
 from datetime import date
@@ -21,6 +21,7 @@ class BookingListingIn(BaseModel):
     hotel_images: Optional[List[str]] = []
     payout_account: str
     seller_id: int  # Temporary — in future will come from auth token
+    rating: Optional[float] = 0.0  # New field
 
 @router.post("/listings")
 async def create_listing(listing: BookingListingIn):
@@ -47,6 +48,7 @@ async def create_listing(listing: BookingListingIn):
         hotel_images=listing.hotel_images,
         payout_account=listing.payout_account,
         seller=seller,
+        rating=listing.rating  # New field
     )
 
     print("Listing created with ID:", new_listing.id)
@@ -61,8 +63,34 @@ async def create_listing(listing: BookingListingIn):
     }
 
 @router.get("/listings")
-async def get_all_listings():
-    listings = await BookingListing.all().prefetch_related("seller")
+async def get_filtered_listings(
+    location: Optional[str] = Query(None),
+    check_in: Optional[date] = Query(None),
+    max_price: Optional[float] = Query(None),
+    min_rating: Optional[float] = Query(None),
+    sort_by: Optional[str] = Query(None, description="Options: price_asc, price_desc, rating")
+):
+    query = BookingListing.all().prefetch_related("seller")
+
+    if location:
+        query = query.filter(location__icontains=location)
+    if check_in:
+        query = query.filter(check_in__gte=check_in)
+    if max_price is not None:
+        query = query.filter(resale_price__lte=max_price)
+    if min_rating is not None:
+        query = query.filter(rating__gte=min_rating)
+
+    # Sorting logic
+    if sort_by == "price_asc":
+        query = query.order_by("resale_price")
+    elif sort_by == "price_desc":
+        query = query.order_by("-resale_price")
+    elif sort_by == "rating":
+        query = query.order_by("-rating")
+
+    listings = await query
+
     return [
         {
             "id": listing.id,
@@ -73,6 +101,7 @@ async def get_all_listings():
             "room_type": listing.room_type,
             "resale_price": float(listing.resale_price),
             "original_price": float(listing.original_price),
+            "rating": float(listing.rating or 0),
             "amenities": listing.amenities.split(", ") if listing.amenities else [],
             "hotel_images": listing.hotel_images or [],
             "voucher_image_url": listing.voucher_image_url,

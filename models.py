@@ -17,6 +17,8 @@ class BookingListing(Model):
     number_of_guests = fields.IntField()
     room_type = fields.CharField(max_length=100)
     amenities = fields.TextField(null=True)
+    rating = fields.FloatField(default=0.0)
+
 
     original_price = fields.DecimalField(max_digits=10, decimal_places=2)
     resale_price = fields.DecimalField(max_digits=10, decimal_places=2)
