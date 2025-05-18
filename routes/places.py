@@ -1,28 +1,43 @@
-# routes/places.py
-
-from fastapi import APIRouter, Query, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 import os
 import httpx
 
 router = APIRouter()
 
-GOOGLE_PLACES_API_KEY = os.getenv("GOOGLE_PLACES_API_KEY")
-GOOGLE_PLACES_URL = "https://maps.googleapis.com/maps/api/place/textsearch/json"
+GOOGLE_API_KEY = os.getenv("GOOGLE_PLACES_API_KEY")
+
+PHOTO_BASE_URL = "https://maps.googleapis.com/maps/api/place/photo"
 
 @router.get("/places/search")
-async def search_places(query: str = Query(..., description="Hotel name + city")):
-    if not GOOGLE_PLACES_API_KEY:
-        raise HTTPException(status_code=500, detail="API key not configured")
+async def search_places(query: str):
+    if not GOOGLE_API_KEY:
+        raise HTTPException(status_code=500, detail="Google Places API key not configured.")
 
+    url = "https://maps.googleapis.com/maps/api/place/textsearch/json"
     params = {
         "query": query,
-        "key": GOOGLE_PLACES_API_KEY
+        "key": GOOGLE_API_KEY
     }
 
     async with httpx.AsyncClient() as client:
-        response = await client.get(GOOGLE_PLACES_URL, params=params)
+        response = await client.get(url, params=params)
+        data = response.json()
 
-    if response.status_code != 200:
-        raise HTTPException(status_code=500, detail="Failed to fetch data from Google Places")
+    if data["status"] != "OK" or not data["results"]:
+        raise HTTPException(status_code=404, detail="No results found.")
 
-    return response.json()
+    result = data["results"][0]  # Just return the top result
+
+    # Construct photo URL
+    photo_url = None
+    if "photos" in result:
+        photo_ref = result["photos"][0]["photo_reference"]
+        photo_url = f"{PHOTO_BASE_URL}?maxwidth=800&photoreference={photo_ref}&key={GOOGLE_API_KEY}"
+
+    return {
+        "name": result.get("name"),
+        "address": result.get("formatted_address"),
+        "rating": result.get("rating"),
+        "place_id": result.get("place_id"),
+        "photo_url": photo_url
+    }
