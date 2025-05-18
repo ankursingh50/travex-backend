@@ -3,14 +3,16 @@ from tortoise.contrib.fastapi import register_tortoise
 from tortoise import Tortoise
 from models import User
 from routes.listings import router as listings_router
-from routes.admin import router as admin_router  # ✅ New import
+from routes.admin import router as admin_router
+from routes.places import router as places_router  # ✅ Add this
 import os
 
 app = FastAPI()
 
-# ✅ Register routes
+# ✅ Register all routers
 app.include_router(listings_router)
 app.include_router(admin_router)
+app.include_router(places_router)  # ✅ Register Google Places route
 
 @app.get("/health")
 def health_check():
