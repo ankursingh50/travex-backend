@@ -19,20 +19,26 @@ class BookingListing(Model):
     amenities = fields.TextField(null=True)
     rating = fields.FloatField(default=0.0)
 
-
     original_price = fields.DecimalField(max_digits=10, decimal_places=2)
     resale_price = fields.DecimalField(max_digits=10, decimal_places=2)
 
     voucher_image_url = fields.CharField(max_length=512)
-    hotel_images = fields.JSONField(null=True)  # list of image URLs
+    hotel_images = fields.JSONField(null=True)
 
     payout_account = fields.CharField(max_length=255)
+
+    # New fields to store Google Places metadata
+    place_id = fields.CharField(max_length=255, null=True)
+    google_photo_url = fields.CharField(max_length=1024, null=True)
+    google_rating = fields.FloatField(null=True)
+    google_address = fields.TextField(null=True)
 
     seller = fields.ForeignKeyField("models.User", related_name="listings")
 
     created_at = fields.DatetimeField(auto_now_add=True)
     is_active = fields.BooleanField(default=True)
-    status = fields.CharField(max_length=50, default="pending")  # e.g., pending/approved/sold
+    status = fields.CharField(max_length=50, default="pending")
 
     class Meta:
         table = "booking_listings"
+
