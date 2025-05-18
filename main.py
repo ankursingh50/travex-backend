@@ -4,15 +4,14 @@ from tortoise import Tortoise
 from models import User
 from routes.listings import router as listings_router
 from routes.admin import router as admin_router
-from routes.places import router as places_router  # ✅ Add this
+from routes.places import router as places_router
 import os
 
 app = FastAPI()
 
-# ✅ Register all routers
 app.include_router(listings_router)
 app.include_router(admin_router)
-app.include_router(places_router)  # ✅ Register Google Places route
+app.include_router(places_router)
 
 @app.get("/health")
 def health_check():
@@ -27,7 +26,6 @@ async def init_db():
     await Tortoise.generate_schemas()
     return {"message": "Schema initialized."}
 
-# ✅ ORM setup
 register_tortoise(
     app,
     db_url=os.getenv("DATABASE_URL").replace("postgresql://", "postgres://"),
