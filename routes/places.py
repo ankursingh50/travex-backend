@@ -45,18 +45,22 @@ async def get_place_photo(ref: str = Query(...), maxwidth: int = Query(800)):
     if not GOOGLE_API_KEY:
         raise HTTPException(status_code=500, detail="Google API key not configured.")
 
-    photo_url = (
-        f"{PHOTO_BASE_URL}?maxwidth={maxwidth}"
-        f"&photoreference={ref}&key={GOOGLE_API_KEY}"
-    )
+    params = {
+        "photoreference": ref,
+        "maxwidth": maxwidth,
+        "key": GOOGLE_API_KEY
+    }
 
     try:
-        async with httpx.AsyncClient() as client:
-            response = await client.get(photo_url)
+        async with httpx.AsyncClient(follow_redirects=True) as client:
+            response = await client.get(PHOTO_BASE_URL, params=params)
 
         if response.status_code != 200:
             raise HTTPException(status_code=response.status_code, detail="Failed to fetch image")
 
-        return Response(content=response.content, media_type=response.headers.get("Content-Type", "image/jpeg"))
+        return Response(
+            content=response.content,
+            media_type=response.headers.get("content-type", "image/jpeg")
+        )
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
