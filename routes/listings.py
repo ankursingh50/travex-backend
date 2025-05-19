@@ -2,7 +2,8 @@ from fastapi import APIRouter, HTTPException, Query
 from pydantic import BaseModel
 from typing import List, Optional
 from datetime import date
-from models import BookingListing, User
+# from models import BookingListing, User
+from models.user import User
 import httpx
 import os
 
